@@ -284,6 +284,17 @@ public class XSDDuration extends AbstractDateTime {
             XSDDuration dur = (XSDDuration) obj;
             int[] data1 = canonical(this.data) ;
             int[] data2 = canonical(dur.data) ;
+
+            if (data1[msscale] != data2[msscale]) {
+                if (data1[msscale] > data2[msscale]) {
+                    data2[ms] *= (int) Math.pow(10, data1[msscale] - data2[msscale]);
+                    data2[msscale] = data1[msscale];
+                } else {
+                    data1[ms] *= (int) Math.pow(10, data2[msscale] - data1[msscale]);
+                    data1[msscale] = data2[msscale];
+                }
+            }
+            
             for (int i = 0; i < data1.length; i++) {
                 if (data1[i] != data2[i])
                     return false;
@@ -364,13 +375,14 @@ public class XSDDuration extends AbstractDateTime {
     private static int[] canonical(int[] val) {
         val = Arrays.copyOf(val, val.length) ;
         
-        while ( val[ms] >= 1000 ) {
-            val[s] += 1 ; 
-            val[ms] -= 1000 ;
+        int fslimit = (int) Math.pow(10, val[msscale]);
+        while ( val[ms] >= fslimit ) {
+            val[s] += 1 ;
+            val[ms] -= fslimit;
         }
-        while ( val[ms] <= -1000 ) {
-            val[s] -= 1 ; 
-            val[ms] += 1000 ;
+        while ( val[ms] <= -fslimit ) {
+            val[s] -= 1 ;
+            val[ms] += fslimit;
         }
         
         while ( val[s] >= 60 ) {
